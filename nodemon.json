@@ -1,9 +1,7 @@
 {
     "watch": [
-        "src"
+        "dist"
     ],
-    "ext": "ts",
-    "exec": "node --no-warnings=ExperimentalWarning --loader ts-node/esm ./src/server.ts",
     "events": {
         "start" : "clear" 
     }

@@ -1,1 +1,1 @@
-{"root":["./src/server.ts","./src/config/db.ts","./src/controllers/url.controller.ts","./src/models/url.model.ts","./src/models/user.model.ts","./src/routes/urlroute.ts"],"version":"5.8.2"}
+{"root":["./src/server.ts","./src/config/db.ts","./src/config/passport.ts","./src/controllers/auth.controller.ts","./src/controllers/url.controller.ts","./src/models/url.model.ts","./src/models/user.model.ts","./src/routes/authroutes.ts","./src/routes/urlroute.ts","./src/types/sessiontypes.ts","./src/types/usertype.ts"],"version":"5.8.2"}

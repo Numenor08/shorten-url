@@ -1,20 +1,24 @@
-import { Sequelize } from "sequelize";
+import { Error, Sequelize } from "sequelize";
 import colors from "colors"
 import dotenv from 'dotenv'
 
 dotenv.config();
 
-export const sequelize = new Sequelize(process.env.DB_URI!, {
+export const sequelize = new Sequelize({
     dialect: 'postgres',
-    logging: false
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    logging: false,
 });
 
 export const db = async () => {
     try {
         await sequelize.authenticate();
-        console.log(colors.bgWhite('PostgreSQL Connected'))
-    } catch (err) {
-        console.error(colors.red(`Database Connection Failed: ${err}`))
+        console.log(colors.bgGreen.black(' PostgreSQL Connected '))
+    } catch (err: any) {
+        console.error(colors.bgRed.black(` Database Connection Failed: `))
+        console.error(colors.red(err))
         process.exit(1);
     }
 }
