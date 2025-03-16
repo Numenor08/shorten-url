@@ -10,14 +10,22 @@ import passport from 'passport'
 import './config/passport.js'
 import pgSession from 'connect-pg-simple'
 import { pgPool } from './config/db.js'
+import { rateLimit } from 'express-rate-limit'
 
 dotenv.config()
 
 const PORT = process.env.PORT
 const app = express();
 
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 250,
+    message: { error: 'Too many requests from this IP, please try again later'}
+})
+
 app.use(cors())
 app.use(express.json())
+app.use(limiter)
 app.use(
     session({
         store: new (pgSession(session))({
