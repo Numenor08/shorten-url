@@ -11,7 +11,7 @@ class URL extends Model {
 URL.init(
     {
         id: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.BIGINT,
             primaryKey: true,
             allowNull: false,
             autoIncrement: true,
@@ -23,6 +23,7 @@ URL.init(
         short_url: {
             type: DataTypes.STRING,
             allowNull: false,
+            unique: true,
         },
         clicks: {
             type: DataTypes.BIGINT,
