@@ -7,6 +7,7 @@ import {
     getSession,
     logout
 } from "../controllers/auth.controller.js";
+import { registerValidation } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
@@ -30,7 +31,7 @@ router.get("/google/failure", (req: Request, res: Response) => {
 });
 
 router.post("/login", login);
-router.post("/register", register);
+router.post("/register", registerValidation, register);
 router.get("/session", getSession);
 router.get("/logout", logout);
 

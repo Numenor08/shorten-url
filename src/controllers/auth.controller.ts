@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import User from '../models/user.model.js'
+import { validationResult } from "express-validator";
 import passport from "passport";
-import bcrypt from "bcryptjs";
 
 export const googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] })
 
@@ -11,6 +11,12 @@ export const googleAuthCallback = passport.authenticate('google', {
 });
 
 export const register = async (req: Request, res: Response): Promise<any> => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const filteredErrors = errors.array().map((error) => ({field: (error as any).path, msg: error.msg}));
+        return res.status(400).json({ error: filteredErrors });
+    }
+    
     try {
         const { name, email, password }: { name: string, email: string, password: string } = req.body;
 
@@ -20,7 +26,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 
         if (userExists) return res.status(400).json({ error: "Email already registered" })
         
-        const newUser = await User.create({name, email, password})
+        const newUser = await User.create({name: name.trim(), email, password})
 
         req.logIn(newUser, (err) => {
             if (err) {
