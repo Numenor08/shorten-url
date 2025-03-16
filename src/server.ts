@@ -26,8 +26,8 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use('/', urlRouter)
 app.use("/api/auth", authRoutes);
+app.use('/', urlRouter)
 
 app.listen(PORT, async () => {
     await db()
