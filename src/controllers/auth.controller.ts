@@ -22,67 +22,50 @@ export const register = async (req: Request, res: Response): Promise<any> => {
         
         const newUser = await User.create({name, email, password})
 
-        req.session.user = {
-            name: newUser.name,
-            email: newUser.email,
-        };
-
-        res.status(201).json({ 
-            message: "User registered successfully", 
-            user: {
-                email,
-                name,
-            } 
+        req.logIn(newUser, (err) => {
+            if (err) {
+                console.error(err)
+                return res.status(500).json({ error: 'Server Error'})
+            }
+            res.status(201).json({ 
+                message: "User registered successfully", 
+                user: {
+                    email,
+                    name,
+                } 
+            });
         });
+        
     } catch (err: any) {
         console.error(err)
         res.status(500).json({ error: 'Server Error'})
     }
 }
 
-export const login = async (req: Request, res: Response): Promise<any> => {
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ error: "All fields are required" });
+export const login = (req: Request, res: Response, next: any) => {
+    passport.authenticate('local', (err: Error | null, user: User, info: any) => {
+        if (err) {
+            return next(err);
         }
-
-        const user = await User.findOne({ where: { email } });
-
-        let isMatch: boolean;
-
-        if (user?.password) {
-            isMatch = bcrypt.compareSync(password, user.password);
-        } else {
-            isMatch = true;
+        if (!user) {
+            return res.status(401).json({ error: info.message });
         }
-
-        if (!user || !isMatch) {
-            return res.status(401).json({ error: "Invalid credentials" });
-        }
-
-        req.session.user = {
-            name: user.name,
-            email: user.email,
-        };
-
-        res.status(200).json({ message: "Login successful", userId: user.id });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Server error" });
-    }
+        req.logIn(user, (err) => {
+            if (err) {
+                return next(err);
+            }
+            return res.json({ message: "Login successful", user: {
+                name: user.name,
+                email: user.email
+            } });
+        });
+    })(req, res, next);
 };
 
 export const getSession = (req: Request, res: Response) => {
-    if (req.session.user) {
-        res.json({ user: req.session.user });
-    } else if (req.user) {
+    if (req.user) {
         const user = req.user as User;
-        res.json({ user: {
-            name: user.name,
-            email: user.email
-        }})
+        res.json({ user });
     }else {
         res.status(401).json({ error: "Not authenticated" });
     }

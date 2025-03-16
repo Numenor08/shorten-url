@@ -1,8 +1,10 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as LocalStrategy } from 'passport-local';
 import User from '../models/user.model.js';
 import dotenv from 'dotenv';
 import { UUID } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -34,6 +36,33 @@ passport.use(
     )
 );
 
+passport.use(
+    new LocalStrategy(
+        {
+            usernameField: 'email',
+            passwordField: 'password',
+        },
+        async (email, password, done) => {
+            try {
+
+                const user = await User.findOne({ where: { email } });
+                if (!user) {
+                    return done(null, false, { message: 'Incorrect email or password.' });
+                }
+
+                const isMatch = await bcrypt.compare(password, user.password || '');
+                if (!isMatch) {
+                    return done(null, false, { message: 'Incorrect password.' });
+                }
+
+                return done(null, user);
+            } catch (err) {
+                return done(err);
+            }
+        }
+    )
+);
+
 passport.serializeUser((user: User, done) => {
     if (!user || !user.id) {
         return done(new Error('Invalid user object'), null);
@@ -43,7 +72,7 @@ passport.serializeUser((user: User, done) => {
 
 passport.deserializeUser(async (id: UUID, done) => {
     try {
-        const user = await User.findByPk(id);
+        const user = await User.findByPk(id, { attributes: ['id', 'email', 'name'] });
         if (!user) {
             return done(new Error('User not found'), null);
         }
