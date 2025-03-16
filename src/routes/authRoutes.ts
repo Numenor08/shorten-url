@@ -12,8 +12,21 @@ const router = Router();
 
 router.get("/google", googleAuth);
 router.get("/google/callback", googleAuthCallback, (req: Request, res: Response) => {
-    console.log('Authentication Google successful');
-    res.redirect('/');
+    res.send(`
+    <script>
+        window.opener.postMessage('login-google-success', '*');
+        window.close();
+    </script>    
+    `);
+});
+router.get("/google/failure", (req: Request, res: Response) => {
+    res.send(`
+    <script>
+        alert('Google login failed');
+        window.opener.postMessage('login-google-failure', '*');
+        window.close();
+    </script>    
+    `);
 });
 
 router.post("/login", login);

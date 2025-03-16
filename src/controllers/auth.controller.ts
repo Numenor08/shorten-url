@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 export const googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] })
 
 export const googleAuthCallback = passport.authenticate('google', {
-    failureRedirect: '/login',
+    failureRedirect: '/google/failure',
     session: true,
 });
 
