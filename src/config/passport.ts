@@ -5,6 +5,7 @@ import User from '../models/user.model.js';
 import dotenv from 'dotenv';
 import { UUID } from 'crypto';
 import bcrypt from 'bcryptjs';
+import { BaseApiType } from '../types/baseApiType.js';
 
 dotenv.config();
 
@@ -19,16 +20,31 @@ passport.use(
         },
         async (_, __, profile, done) => {
             try {
-                // Cari atau buat user di database
-                const [user] = await User.findOrCreate({
-                    where: { google_id: profile.id },
-                    defaults: {
-                        name: profile.displayName,
-                        email: profile.emails?.[0].value || '',
-                    },
+                const email = profile.emails?.[0]?.value || '';
+                if (!email) {
+                    return done(null, false, { status: 'success', message: 'Email not found in Google profile' } satisfies BaseApiType);
+                }
+
+                const existingUser = await User.findOne({ where: { email } } );
+
+                if (existingUser) {
+                    if (!existingUser.google_id) {
+                        existingUser.google_id = profile.id;
+                        await existingUser.save();
+                        return done(null, existingUser, { status: 'success', message: 'Email already exist. Now Google account is linked' } satisfies BaseApiType);
+                    }
+
+                    return done(null, existingUser, { status: 'success', message: 'You are logged in successfully.' } satisfies BaseApiType);
+                }
+
+                const user = await User.create({
+                    google_id: profile.id,
+                    name: profile.displayName,
+                    email,
                 });
-                return done(null, user); // Pastikan hanya instance User yang dikembalikan
-            } catch (err: any) {
+
+                return done(null, user, { status: 'success', message: 'You are logged in successfully.' } satisfies BaseApiType);
+            } catch (err) {
                 console.error('Error in GoogleStrategy:', err);
                 return done(err, false);
             }

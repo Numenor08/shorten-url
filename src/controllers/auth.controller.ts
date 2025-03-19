@@ -3,7 +3,7 @@ import User from "../models/user.model.js";
 import { validationResult } from "express-validator";
 import passport from "passport";
 import { BaseApiType } from "../types/baseApiType.js";
-import { error } from "console";
+import { stat } from "fs";
 
 export const googleAuth = passport.authenticate("google", {
     scope: ["profile", "email"],
@@ -120,17 +120,26 @@ export const getSession = (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).json({
-                status: "error",
-                error: "Logout failed",
-            } satisfies BaseApiType);
-        }
-        res.clearCookie("connect.sid");
-        res.status(200).json({
-            status: 'success',
-            message: "Logout successful"
+    if (req.isAuthenticated()) {
+        req.logout((err) => {
+            if (err) {
+                return res.status(500).json({
+                    status: "error",
+                    error: "Server Error",
+                } satisfies BaseApiType);
+            }
+            req.session.destroy(() => {
+                res.clearCookie('connect.sid');
+                return res.status(200).json({
+                    status: "success",
+                    message: "Logout successful",
+                } satisfies BaseApiType);
+            })
+        });
+    } else {
+        res.status(401).json({
+            status: "fail",
+            error: "No user is currently logged in",
         } satisfies BaseApiType);
-    });
+    }
 };
