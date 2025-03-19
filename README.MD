@@ -1,51 +1,51 @@
 
 # Shorten Link API
 
-Shorten Link API adalah sebuah aplikasi berbasis Node.js yang memungkinkan pengguna untuk mempersingkat URL dan mengelola autentikasi pengguna menggunakan Google OAuth dan autentikasi lokal.
+Shorten Link API is a Node.js-based application that allows users to shorten URLs and manage user authentication using Google OAuth and local authentication.
 
 ## Table of Contents
 
-- [Fitur](#Fitur)
-- [Teknologi yang Digunakan](#Teknologi-yang-Digunakan)
-- [Instalasi dan Penggunaan](#Instalasi-dan-Penggunaan)
+- [Features](#Features)
+- [Technologies Used](#Technologies-Used)
+- [Installation and Usage](#Installation-and-Usage)
 - [API Routes](#API-Routes)
-  - [Autentikasi](#Autentikasi)
+  - [Authentication](#Authentication)
   - [URL Shortener](#URL-Shortener)
 
 ---
 
-## Fitur
+## Features
 
-- **Autentikasi**: Mendukung Google OAuth dan autentikasi lokal.
-- **URL Shortener**: Membuat URL pendek dengan opsi kustomisasi.
-- **Rate Limiting**: Membatasi jumlah permintaan untuk mencegah penyalahgunaan.
-- **Session Management**: Menggunakan PostgreSQL untuk menyimpan sesi pengguna.
+- **Authentication**: Supports Google OAuth and local authentication.
+- **URL Shortener**: Create shortened URLs with customization options.
+- **Rate Limiting**: Limits the number of requests to prevent abuse.
+- **Session Management**: Uses PostgreSQL to store user sessions.
 
 ---
 
-## Teknologi yang Digunakan
+## Technologies Used
 
-Berikut adalah teknologi dan library yang digunakan dalam proyek ini:
+The following technologies and libraries are used in this project:
 
 - **Node.js**: v18+
 - **Express**: v4.21.2
 - **TypeScript**: v5.8.2
 - **Sequelize**: v6.37.6
-- **PostgreSQL**: Database untuk menyimpan data URL dan pengguna.
-- **Passport**: v0.7.0 (untuk autentikasi)
+- **PostgreSQL**: Database for storing URL and user data.
+- **Passport**: v0.7.0 (for authentication)
   - **passport-google-oauth20**: v2.0.0
   - **passport-local**: v1.0.0
-- **express-session**: v1.18.1 (untuk manajemen sesi)
-- **connect-pg-simple**: v10.0.0 (untuk menyimpan sesi di PostgreSQL)
-- **express-validator**: v7.2.1 (untuk validasi input)
-- **express-rate-limit**: v7.5.0 (untuk membatasi permintaan)
-- **nanoid**: v5.1.3 (untuk membuat URL pendek)
-- **bcryptjs**: v3.0.2 (untuk hashing password)
-- **dotenv**: v16.4.7 (untuk mengelola variabel lingkungan)
+- **express-session**: v1.18.1 (for session management)
+- **connect-pg-simple**: v10.0.0 (to store sessions in PostgreSQL)
+- **express-validator**: v7.2.1 (for input validation)
+- **express-rate-limit**: v7.5.0 (for request limiting)
+- **nanoid**: v5.1.3 (to generate short URLs)
+- **bcryptjs**: v3.0.2 (for password hashing)
+- **dotenv**: v16.4.7 (to manage environment variables)
 
 ---
 
-## Instalasi dan Penggunaan
+## Installation and Usage
 
 ### 1. Clone Repository
 
@@ -54,16 +54,17 @@ git clone https://github.com/username/shorten-link.git
 cd shorten-link
 ```
 
-
 ### 2. Install Dependencies
 
-Gunakan `npm` untuk menginstal dependensi:
+Use `npm` to install dependencies:
 
+```bash
 npm install
+```
 
-### 3. Konfigurasi Environment
+### 3. Configure Environment
 
-Buat file `.env` berdasarkan `.env.example`:
+Create a `.env` file based on `.env.example`:
 
 ```bash
 PORT=3000
@@ -76,38 +77,42 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 SESSION_SECRET=your_session_secret
 ```
 
-### 4. Jalankan Server
+### 4. Run the Server
 
-Untuk mode pengembangan:
+For development mode:
 
 ```bash
+npm run build
 npm run dev
 ```
 
-Untuk mode produksi:
+For production mode:
 
 ```bash
 npm run build
 npm run start
 ```
 
-## API Routes
+## 
+API Routes
 
 ---
 
-### Autentikasi
+### Authentication
 
 #### 1. Google OAuth
 
 * **GET** `/api/auth/google`
-  Mengarahkan pengguna ke halaman login Google.
+  Redirects users to the Google login page.
 * **GET** `/api/auth/google/callback`
-  Callback URL setelah login Google berhasil.
+  Callback URL after successful Google login.
+
+  **Note**: If the user's email is already registered manually (without a Google ID), the system will update the account with the new Google ID. This allows users to log in using Google OAuth without creating duplicate accounts.
 
 #### 2. Register
 
 * **POST** `/api/auth/register`
-  Mendaftarkan pengguna baru.
+  Registers a new user.
   **Body:**
   ```json
   {
@@ -120,7 +125,7 @@ npm run start
 #### 3. Login
 
 * **POST** `/api/auth/login`
-  Login menggunakan email dan password.
+  Logs in using email and password.
   **Body:**
   ```json
   {
@@ -131,13 +136,13 @@ npm run start
 
 #### 4. Get Session
 
-* **GET** `/api/auth/google/callback`
-  Callback URL setelah login Google berhasil.
+* **GET** `/api/auth/session`
+  Retrieves session data.
 
 #### 5. Logout
 
-* **GET** `/api/auth/google/logout`
-  Logout dari sesi saat ini.
+* **GET** `/api/auth/logout`
+  Logs out from the current session.
 
 ---
 
@@ -145,8 +150,12 @@ npm run start
 
 #### 1. Create Short URL
 
-* **POST** `/shorten`
-  Membuat URL pendek.
+* **POST** `/api/shorten`
+  Creates a shortened URL.
+
+  **Headers:**
+
+  - `Authorization`: Bearer token (required for authentication)
 
   **Body:**
 
@@ -157,43 +166,124 @@ npm run start
   }
   ```
 
-#### 2. Redirect Short URL
+  **Response:**
 
-* **POST** `/:shortUrl`
-  Mengarahlan pengguna ke URL asli berdasarkan URL pendek.
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "id": 1,
+      "originalUrl": "https://example.com",
+      "shortUrl": "http://localhost:3000/mycustomurl",
+      "createdAt": "2025-03-19T12:00:00.000Z"
+    }
+  }
+  ```
+
+#### 2. Get All Short URLs
+
+* **GET** `/api/shorten`
+  Retrieves all shortened URLs owned by the currently logged-in user.
+
+  **Headers:**
+
+  - `Authorization`: Bearer token (required for authentication)
+
+  **Response:**
+
+  ```json
+  {
+    "status": "success",
+    "data": [
+      {
+        "id": 1,
+        "originalUrl": "https://example.com",
+        "shortUrl": "http://localhost:3000/mycustomurl",
+        "createdAt": "2025-03-19T12:00:00.000Z"
+      },
+      {
+        "id": 2,
+        "originalUrl": "https://anotherexample.com",
+        "shortUrl": "http://localhost:3000/anotherurl",
+        "createdAt": "2025-03-19T12:05:00.000Z"
+      }
+    ]
+  }
+  ```
+
+#### 3. Get Short URL by ID
+
+* **GET** `/api/shorten/:id`
+  Retrieves details of a shortened URL by ID.
+
+  **Headers:**
+
+  - `Authorization`: Bearer token (required for authentication)
+
+  **Response:**
+
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "id": 1,
+      "originalUrl": "https://example.com",
+      "shortUrl": "http://localhost:3000/mycustomurl",
+      "createdAt": "2025-03-19T12:00:00.000Z"
+    }
+  }
+  ```
+
+#### 4. Delete Short URL
+
+* **DELETE** `/api/shorten/:id`
+  Deletes a shortened URL by ID.
+
+  **Headers:**
+
+  - `Authorization`: Bearer token (required for authentication)
+
+  **Response:**
+
+  ```json
+  {
+    "status": "success",
+    "message": "Short URL deleted successfully."
+  }
+  ```
 
 ---
 
-## Struktur Proyek
+## Project Structure
 
 ```
 shorten-link/
 ├── src/
-│   ├── config/         # Konfigurasi database dan passport
-│   ├── controllers/    # Logika bisnis untuk autentikasi dan URL
-│   ├── middlewares/    # Middleware untuk validasi dan autentikasi
-│   ├── models/         # Model Sequelize untuk database
-│   ├── routes/         # Definisi rute API
-│   ├── types/          # Deklarasi tipe TypeScript
-│   └── server.ts       # Entry point aplikasi
-├── db/                 # File SQL untuk database
-├── [.env.example](http://_vscodecontentref_/1)        # Contoh file environment
-├── [package.json](http://_vscodecontentref_/2)        # Konfigurasi npm
-├── [tsconfig.json](http://_vscodecontentref_/3)       # Konfigurasi TypeScript
-└── [README.md](http://_vscodecontentref_/4)           # Dokumentasi proyek
+│   ├── config/         # Configuration for database and passport
+│   ├── controllers/    # Business logic for authentication and URL
+│   ├── middlewares/    # Middleware for validation and authentication
+│   ├── models/         # Sequelize models for the database
+│   ├── routes/         # API route definitions
+│   ├── types/          # TypeScript type declarations
+│   └── server.ts       # Application entry point
+├── db/                 # SQL files for the database
+├── [.env.example](http://_vscodecontentref_/1)        # Example environment file
+├── [package.json](http://_vscodecontentref_/2)        # npm configuration
+├── [tsconfig.json](http://_vscodecontentref_/3)       # TypeScript configuration
+└── [README.md](http://_vscodecontentref_/4)           # Project documentation
 ```
 
 ---
 
 ## Notes:
 
-* Pastikan PostgreSQL sudah terinstal dan berjalan di sistem Anda.
-* Gunakan library seperti Postman untuk menguji endpoint API.
-* Jangan lupa untuk menjaga keamanan file `.env` Anda.
+* Ensure PostgreSQL is installed and running on your system.
+* Use tools like Postman to test the API endpoints.
+* Remember to keep your `.env` file secure.
 
 ---
 
-## Kontributor
+## Contributors
 
 * **Athaya Razan Zaidan**
-  Penulis dan pengembang utama proyek ini.
+  Author and main developer of this project.
