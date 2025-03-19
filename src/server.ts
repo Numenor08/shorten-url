@@ -11,6 +11,8 @@ import './config/passport.js'
 import pgSession from 'connect-pg-simple'
 import { pgPool } from './config/db.js'
 import { rateLimit } from 'express-rate-limit'
+import { redirectShortUrl } from './controllers/url.controller.js'
+import { isAuthenticated } from './middlewares/authMiddleware.js'
 
 dotenv.config()
 
@@ -42,7 +44,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api/auth", authRoutes);
-app.use('/', urlRouter)
+app.use('/api', urlRouter)
+app.use('/:shortUrl',isAuthenticated, redirectShortUrl)
 
 app.listen(PORT, async () => {
     await db()

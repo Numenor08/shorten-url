@@ -1,10 +1,9 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../config/db.js";
 import bcrypt from "bcryptjs";
-import { UUID } from "crypto";
 
 class User extends Model {
-    declare id: UUID;
+    declare id: string;
     declare google_id?: string | null;
     declare email: string;
     declare name: string;

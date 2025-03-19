@@ -1,11 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { check } from "express-validator";
+import { BaseApiType } from "../types/baseApiType.js";
 
 export const isAuthenticated = ( req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {
         return next();
     }
-    res.status(401).json({ error: "Unauthorized. Please log in to access this resource." });
+    res.status(401).json({ 
+        status: 'fail',
+        error: "Unauthorized. Please log in to access this resource." 
+    } satisfies BaseApiType);
 }
 
 export const registerValidation = [
