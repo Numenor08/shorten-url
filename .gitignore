@@ -8,3 +8,4 @@ ssl
 *.cnf
 *.pem
 todo.txt
+public

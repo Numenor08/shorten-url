@@ -7,5 +7,7 @@ export const UrlValidation = [
     check("customUrl")
         .optional()
         .isLength({ min: 6, max: 15 })
-        .withMessage("Custom URL must be between 6 and 15 characters"),
-]
+        .withMessage("Custom URL must be between 6 and 15 characters")
+        .matches(/^[^\s\/?<>*\\:|]+$/)
+        .withMessage("Custom URL must not contain '/', spaces, '?', '<', '>', '*', '\\', ':', or '|'"),
+];

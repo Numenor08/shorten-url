@@ -4,6 +4,12 @@ import URL from '../models/url.model.js'
 import { nanoid } from 'nanoid'
 import { validationResult } from 'express-validator'
 import User from '../models/user.model.js';
+import dotenv from 'dotenv'
+import fs from 'fs'
+import path from 'path';
+import QRCode from 'qrcode';
+
+dotenv.config()
 
 export const getAllShortUrl = async (req: Request, res: Response): Promise<any> => {
     try {
@@ -27,20 +33,20 @@ export const getShortUrlById = async (req: Request, res: Response): Promise<any>
     try {
         const id = Number(req.params.id)
         if (isNaN(id)) return res.status(400).json({ status: 'fail', error: 'Invalid ID format' } satisfies BaseApiType)
-        
+
         const { id: request_id_user } = req.user as User
 
         const url = await URL.findByPk(id)
 
         if (!url) return res.status(404).json({ status: 'fail', error: 'URL not found' } satisfies BaseApiType)
-        
+
         const { id_user } = url.dataValues as URL
 
-        if (id_user !== request_id_user) return res.status(403).json({ status: 'fail', error: 'The user does not own this URL'} satisfies BaseApiType)
-        
-        return res.status(200).json({ 
-            status: 'success', 
-            message: 'Get URL by id Succesful', 
+        if (id_user !== request_id_user) return res.status(403).json({ status: 'fail', error: 'The user does not own this URL' } satisfies BaseApiType)
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Get URL by id Succesful',
             data: url.dataValues
         } satisfies BaseApiType)
 
@@ -114,9 +120,11 @@ export const deleteShortUrl = async (req: Request, res: Response): Promise<any> 
 
         if (!url) return res.status(404).json({ status: 'fail', error: 'URL not found' } satisfies BaseApiType)
 
-        const { id_user } = url.dataValues as URL
+        const { id_user, image_path } = url.dataValues as URL
 
         if (id_user !== request_id_user) return res.status(403).json({ status: 'fail', error: 'The user does not own this URL' } satisfies BaseApiType)
+
+        if (image_path && fs.existsSync(image_path)) fs.unlinkSync(image_path)
 
         await URL.destroy({ where: { id: id } })
 
@@ -133,6 +141,82 @@ export const deleteShortUrl = async (req: Request, res: Response): Promise<any> 
         } satisfies BaseApiType)
     }
 }
+
+export const createQRCode = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { shortUrl }: { shortUrl: string } = req.body;
+        const { id: request_id_user } = req.user as User;
+
+        const url = await URL.findOne({ where: { short_url: shortUrl } });
+        if (!url) return res.status(400).json({ status: 'fail', error: 'URL not found' } satisfies BaseApiType);
+
+        if (url.dataValues.image_path) {
+            return res.status(400).json({
+                status: 'fail',
+                error: 'QR Code already exists for this URL'
+            } satisfies BaseApiType);
+        }
+
+        const { id_user } = url.dataValues as URL;
+        if (id_user !== request_id_user) return res.status(403).json({ status: 'fail', error: 'The user does not own this URL' } satisfies BaseApiType)
+
+        const qrCodePath = path.join('public', 'qrcodes');
+
+        if (!fs.existsSync(qrCodePath)) fs.mkdirSync(qrCodePath, { recursive: true });
+
+        const qrCodeFileName = `${shortUrl}.png`;
+        const qrCodeFilePath = path.join(qrCodePath, qrCodeFileName);
+
+        await QRCode.toFile(qrCodeFilePath, `${process.env.BASE_URL}:${process.env.PORT}/${shortUrl}`);
+
+        const isUpdated = await URL.update({ image_path: qrCodeFilePath }, { where: { short_url: shortUrl } });
+
+        if (!isUpdated) return res.status(500).json({
+            status: 'error',
+            error: 'Failed to save QR Code to the database'
+        } satisfies BaseApiType);
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'QR Code created and saved successfully',
+            data: {
+                shortUrl,
+                qrCodePath: qrCodeFilePath,
+            },
+        } satisfies BaseApiType);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            status: 'error',
+            error: 'Server error',
+        } satisfies BaseApiType);
+    }
+};
+
+export const getQRCode = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { shortUrl } = req.params as { shortUrl: string };
+        const { id: request_id_user } = req.user as User;
+
+        const url = await URL.findOne({ where: { short_url: shortUrl } });
+
+        if (!url) return res.status(404).json({ status: 'fail', error: 'URL not found' } satisfies BaseApiType);
+
+        const { id_user, image_path } = url.dataValues as URL;
+
+        if (id_user !== request_id_user) return res.status(403).json({ status: 'fail', error: 'The user does not own this URL' } satisfies BaseApiType);
+
+        if (!image_path || !fs.existsSync(image_path)) return res.status(404).json({ status: 'fail', error: 'QR Code not found' } satisfies BaseApiType);
+
+        return res.status(200).sendFile(path.resolve(image_path));
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            status: 'error',
+            error: 'Server error',
+        } satisfies BaseApiType);
+    }
+};
 
 export const redirectShortUrl = async (req: Request, res: Response): Promise<any> => {
     const { shortUrl } = req.params as { shortUrl: string };

@@ -8,6 +8,7 @@ class URL extends Model {
     declare shortUrl: string;
     declare clicks: number;
     declare id_user: string
+    declare image_path: string;
 }
 
 URL.init(
@@ -41,6 +42,10 @@ URL.init(
             },
             onDelete: 'CASCADE',
             onUpdate: 'CASCADE'
+        },
+        image_path: {
+            type: DataTypes.STRING,
+            allowNull: true,
         }
     },
     {
