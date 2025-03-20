@@ -1,4 +1,3 @@
-
 # Shorten Link API
 
 Shorten Link API is a Node.js-based application that allows users to shorten URLs and manage user authentication using Google OAuth and local authentication.
@@ -20,6 +19,7 @@ Shorten Link API is a Node.js-based application that allows users to shorten URL
 - **URL Shortener**: Create shortened URLs with customization options.
 - **Rate Limiting**: Limits the number of requests to prevent abuse.
 - **Session Management**: Uses PostgreSQL to store user sessions.
+- **Generate QR Code**: Create QR Code from shorten URLs.
 
 ---
 
@@ -42,6 +42,7 @@ The following technologies and libraries are used in this project:
 - **nanoid**: v5.1.3 (to generate short URLs)
 - **bcryptjs**: v3.0.2 (for password hashing)
 - **dotenv**: v16.4.7 (to manage environment variables)
+- **qrcode**: v1.5.4 (to generate qr code)
 
 ---
 
@@ -56,7 +57,7 @@ cd shorten-link
 
 ### 2. Install Dependencies
 
-Use `npm` to install dependencies:
+Use `npm` or other package manager to install dependencies:
 
 ```bash
 npm install
@@ -68,6 +69,7 @@ Create a `.env` file based on `.env.example`:
 
 ```bash
 PORT=3000
+BASE_URL=localhost
 DB_PORT=5432
 DB_USERNAME=your_db_username
 DB_PASSWORD=your_db_password
@@ -93,7 +95,6 @@ npm run build
 npm run start
 ```
 
-## 
 API Routes
 
 ---
@@ -152,10 +153,6 @@ API Routes
 
 * **POST** `/api/shorten`
   Creates a shortened URL.
-
-  **Headers:**
-
-  - `Authorization`: Bearer token (required for authentication)
 
   **Body:**
 
@@ -251,6 +248,57 @@ API Routes
     "message": "Short URL deleted successfully."
   }
   ```
+
+
+
+#### 5. Create QR Code
+
+* **POST** `/api/shorten/qrcode`
+  Create QR Code for short URL.
+
+  **Body:**
+
+```json
+
+  {
+
+    "shortUrl":"myshorturl"
+
+  }
+
+```
+
+**
+    Response:**
+
+```json
+
+  {
+
+    "status":"success",
+
+    "message":"QR Code created and saved successfully",
+
+    "data": {
+
+      "shortUrl":"myshorturl",
+
+      "qrCodePath":"public/qrcodes/mycustomurl.png"
+
+    }
+
+  }
+
+```
+
+
+#### 6. Get QR Code
+
+* **GET** `/api/shorten/qrcode/:shortUrl`
+  Get QR Code file for short URL.
+
+  **Response:**
+  QR Code file will be sent as response.
 
 ---
 
